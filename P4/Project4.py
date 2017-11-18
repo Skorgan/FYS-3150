@@ -10,17 +10,26 @@ Run as script for simple 2x2 test.
 class Ising_Model_2Dlattice_spin:
     def __init__(self,inscript=False,initial_file='noname'):#dimensions,cycles,temp_initial,temp_final,dT,J=1.):
         """
-        Give initial size of lattice, temperature, MC-cycles and temperature step.
-        The order must be [L,T_i,T_f,Tn,MCc], where
-        L: Lattice size (corresponding to LxL)
-        T_i: Initial temperature
-        T_f: Final temperature (if T_i = T_f, only one temperature is iterated over)
-        Tn: Number of temperature points in interval [T_i,T_f]
-        MCc: Monte-Carlo cycles
-        
         Note:
+            Module created to use a specialized Metropolis algorithm for the Ising model.
+            Give initial size of lattice, temperature, MC-cycles and temperature step.
+            The order must be [L,T_i,T_f,Tn,MCc], see args below
+        Args:
+            Note: Given as type = numpy.ndarray or in text file.    
+            inscript (numpy.ndarray,semi-optional): This is the preferred option to give model description,
+                the included arguments are: 
+                    L: Lattice size (corresponding to LxL)
+                    T_i: Initial temperature
+                    T_f: Final temperature (if T_i = T_f, only one temperature is iterated over)
+                    Tn: Number of temperature points in interval [T_i,T_f]
+                    MCc: Monte-Carlo cycles
+            initial_file (str): IF, for some reason, the initial values are stored in correct order in a file (see above)
+                                then give filename and omit 'inscript' argument.
+        Additional Note:
             Arguments can be given either as an array or in a text file, while the latter option
             is not necessary. Multiple values as columns is not supported.
+        Attributes:
+            All arguments.
         """
         if str(initial_file) is not 'noname':
             self.L,self.T_i,self.T_f,self.Tn,self.MCc = np.genfromtxt(str(initial_file))
@@ -33,11 +42,21 @@ class Ising_Model_2Dlattice_spin:
                 self.MCc = int(self.MCc)
             else:
                 print 'There are no parameters given\nAborting.'
-                #sys.exit() 
+                sys.exit(1) 
 #-------------------------------------------------------------------------------------------          
     def initial_state(self,random_i=True):
         """
-        Creates the initial states and sets the initial energy and magnetic moment values.
+        Creates the initial states and calculates the initial total energy -and magnetic moment values.
+        Args:
+            random_i (bool): If set to 'False', the initial set up will be all s=1, where 's' is the spin value.
+                             default is 'True' which means the initial set up is a random state; s in {-1,1}.
+        Attributes:
+            Makes the total energy, magnetization and spin matrix class attributes.
+            spin_mat: a (Lx2)x(Lx2) numpy.ndarray containing the system configuration.
+            E (float): Total energy for inital state.
+            M (float): Total magnetization for initial state.
+        Returns:
+            None-type
         """
         a = np.array([-1.,1.])
         L = self.L
@@ -60,6 +79,11 @@ class Ising_Model_2Dlattice_spin:
         return None
 #------------------------------------------------------------------------------------------- 
     def energy(self): # This is added in ordert to extract a PDF from the results
+        """
+        Note:
+            This is not implemented to be a part of the class, alterations in the code must be done,
+            see script: 'supplementary'
+        """
         E_st = 0
         for i in xrange(1,int(self.L)+1):
             for j in xrange(1,int(self.L)+1):
@@ -87,6 +111,10 @@ class Ising_Model_2Dlattice_spin:
         
 #-------------------------------------------------------------------------------------------          
     def Metropolis(self,w):
+        """
+        Note:
+            Calculates a complete MC-cycle optimized to suit the Ising model.
+        """
         L = int(self.L)
         for iterable in xrange(L*L):
             i,j = np.random.randint(1,L+1,2)
@@ -113,9 +141,14 @@ class Ising_Model_2Dlattice_spin:
         Args:
             random_i (bool,default=True): Set if the initial state should be random or s=1 for all.
             store_values (bool,optional): Set 'True' if values are to be stored then give:
-            filename (str,optional) : if store_values is set True, give a filename.
+            filename (str,semi-optional): if store_values is set True, give a filename.
             when_save (int,optional): If the above two are given, then this will set the number of
                                       MC-cycles should be between values are written. 
+        Attributes:
+            The structure follows the example C++ code found in the Computational Physics lecture notes (2015) at UiO.
+            The different aspects are assumed known for the intended reader.
+        Returns:
+            Default is a None-type, but if total energy is wanted, then change this below.
         """
         # Make them local var, define T interval
         MCc = self.MCc; T_i = self.T_i
@@ -179,6 +212,23 @@ class Ising_Model_2Dlattice_spin:
 #-------------------------------------------------------------------------------------------                 
              
     def average(self,avg,T,cycle,filename='noname'): # Filename to be implemented
+        """
+        Note:
+            Calculates physical properties relating to the system state.
+            The structure is again assumed known for the intended reader, but with
+            changes in how values are to be stored. Due to the different sets, and 
+            memory usage, there are no 'preset' on which values are stored.
+            All presets used are shown below, there are three of them, two are 
+            always commented out.
+        
+        Additional comments:
+            The statement: 'if hasattr(self,'fil')' is set in order to know if the file is to be created
+                            and store values for the first time. It will then assign a filename as a class attribute
+                            and the method will then know that values are to be 'appended'.
+        Returns:
+            None-type
+        """
+        
         Mc =  float(cycle) # 
         T = float(T)
         L_tot = float(self.L*self.L)
@@ -195,9 +245,9 @@ class Ising_Model_2Dlattice_spin:
         # This is mostly a result of me being tired of overwriting data...
         if filename is not 'noname': # Check if values are to be stored
             #values = np.array([E_bar,E_var,M_bar_abs,M_abs_var,T,Mc,self.accepted/L_tot])
-            #values = np.array([E_bar,E_var,M_bar_abs,M_abs_var,Cv,Chi,T,Mc]) # This is original
+            #values = np.array([E_bar,E_var,M_bar_abs,M_abs_var,Cv,Chi,T,Mc]) # This is original (initial)
             values = np.array([E_bar,M_bar_abs,Cv,Chi,T]) # For multiple temp run
-            if hasattr(self,'fil') is False: 
+            if hasattr(self,'fil') is False:    # Check if class has initialized a filename
                 if not '.txt' in str(filename): # Check if filename is given in full
                     filename += '.txt'
                 if os.path.isfile(filename):    # Check if file exists, respond accordingly

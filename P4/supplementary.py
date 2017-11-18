@@ -3,10 +3,13 @@ from Project4 import *
 import matplotlib.pyplot as plt
 """
 NB! If function 'P' is run with argument 'get_vals=True', you need to uncomment the two expressions
-at lines 127 and 152 in the class 'Project4'. If you copy all text files
+at lines 186 and 211 in the class 'Project4'. If you copy all text files
 in my GitHub, no 'writing' runs are necessary. The one exception is the last two functions, 
-the files were overwritten and lost, so in order run, one must run 'several_runs()' but check the arguments
-regarding folder and names. 
+the files were (despite of efforts against it) overwritten and lost, so in order run, 
+one must run 'several_runs()' (which I highly advice against due to the time needed = 52h) 
+but check the arguments regarding folder and names.
+
+The structure should be chronological following the assignment 4. in Computational Physics at UiO.
 """
 def two_two_lattice(MCc=1E6): 
     # Run parameters
@@ -149,7 +152,10 @@ def P(get_values=False,MCc=1E6,L=20,T=1.0): #
     return None
 #P(T=2.4)  # Remove T=2.4 to get T=1. histo
 
-def several_runs(): # Writes data for L=40,60,80,100
+
+
+def several_runs(): # Writes data for L=40,60,80,100 over 11 temperatures in the interval [2.2,2.3]
+    
     T_i = 2.2; T_f = 2.3; Tn = 0.01
     MCc = 1E5
     L_ = np.array([40,60,80,100])
@@ -161,7 +167,10 @@ def several_runs(): # Writes data for L=40,60,80,100
         del test
     return None
 #several_runs()
-
+"""
+These functions do not have the files needed in my GitHub.
+Comments on this is given in a report.
+"""
 def plot_several_runs():
     data = np.genfromtxt('data/L40MCc100000.txt')   # Ordered as  [<E>,<|M|>,Cv,chi,T]
     data2 = np.genfromtxt('data/L60MCc100000.txt')
